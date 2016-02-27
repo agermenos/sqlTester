@@ -1,5 +1,6 @@
 package com.sleepsoft.sql;
 
+import com.sleepsoft.model.Brand;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -19,21 +20,50 @@ public class ArticleDAO {
         this.dataSource = dataSource;
     }
 
-    public String getBrandDomain(int articleId){
-        String sql = "select domain from brand join article on (article.brand_owner = brand.id) WHERE article.id=?";
+    public int getCurrentId () {
+        String sql = "select nextval(?)";
         Connection conn = null;
-        String result="empty";
+        int result=0;
 
         try {
             conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, articleId);
+            ps.setString(1, "redirect_seq");
             ResultSet rs = ps.executeQuery();
             if (rs.next()){
-                result = rs.getString(1);
+                result = rs.getInt(1);
             }
             ps.close();
             return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {}
+            }
+
+        }
+    }
+
+    public Brand getBrand(int articleId){
+        String sql = "select article.brand_owner, brand.domain from brand join article on (article.brand_owner = brand.id) WHERE article.id=?";
+        Connection conn = null;
+        String result="empty";
+        Brand brand = null;
+
+        try {
+            conn = dataSource.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt((int)1, articleId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()){
+                brand = new Brand(rs.getInt(1), rs.getString(2));
+            }
+            ps.close();
+            return brand;
         } catch (SQLException e) {
             throw new RuntimeException(e);
 
@@ -74,8 +104,6 @@ public class ArticleDAO {
 
         }
     }
-
-
 
     public static void main(String args[]){
         ApplicationContext context =

@@ -1,5 +1,6 @@
 package com.sleepsoft.strategy;
 
+import com.sleepsoft.model.Brand;
 import com.sleepsoft.sql.ArticleDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -17,6 +18,16 @@ import java.util.List;
 public class ArticleStrategyImplementation extends RedirectStrategy {
     @Autowired
     ArticleDAO articleDAO;
+
+    @Override
+    public int getCurrentId() {
+        return articleDAO.getCurrentId();
+    }
+
+    @Override
+    public Brand getBrand(int articleId){
+        return articleDAO.getBrand(articleId);
+    }
 
     @Override
     public List getItemList() {
@@ -41,16 +52,18 @@ public class ArticleStrategyImplementation extends RedirectStrategy {
     }
 
     @Override
-    public String getNewUrl(Object o) {
+    public String getRule(Brand brand) {
         StringBuilder newUrl = new StringBuilder("http://");
-        String id = (String)o;
-        int articleId = Integer.parseInt(id);
-        String domain = articleDAO.getBrandDomain(articleId);
-        if (domain.equals("empty")) {
-            return "";
+        if (brand!=null) {
+            if (brand.getDomain().equals("empty")) {
+                return "";
+            }
+            else {
+                newUrl.append(brand.getDomain()).append("/").append("article");
+                return newUrl.toString();
+            }
         }
-        newUrl.append(domain).append("/").append("article/").append(id);
-        return newUrl.toString();
+        return null;
     }
 
     public static void main(String args[]){
